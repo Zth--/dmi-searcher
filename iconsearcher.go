@@ -111,6 +111,10 @@ func getfiles(c *gin.Context) {
 func geticon(c *gin.Context) {
 	middleend(c)
 	filename := c.Param("filename")
+	if _, ok := icons[filename]; !ok {
+		c.JSON(http.StatusNoContent, "no")
+		return
+	}
 	filepath := icons[filename].Filepath
 	log.Println(filepath)
 	c.Writer.Header().Set("Content-Type", "image/png")
