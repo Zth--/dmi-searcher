@@ -116,7 +116,6 @@ func geticon(c *gin.Context) {
 		return
 	}
 	filepath := icons[filename].Filepath
-	log.Println(filepath)
 	c.Writer.Header().Set("Content-Type", "image/png")
 	c.File(filepath)
 }
