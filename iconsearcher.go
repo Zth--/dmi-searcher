@@ -9,7 +9,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gopkg.in/yaml.v2"
 )
+
+type Cfg struct {
+	IconsFolder string `yaml:"icons_folder"`
+}
 
 type Dmi struct {
 	Name string `json:"dmi"`
@@ -24,6 +29,7 @@ type Icon struct {
 }
 
 var icons map[string]Icon
+var AppConfig *Cfg
 
 func readfiles() {
 	var result []string
@@ -31,7 +37,7 @@ func readfiles() {
 
 	vgicon_dir := "https://github.com/vgstation-coders/vgstation13/tree/Bleeding-Edge/"
 
-	errs := filepath.Walk("../icons",
+	errs := filepath.Walk(AppConfig.IconsFolder,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -59,6 +65,7 @@ func readfiles() {
 
 func main() {
 	icons = make(map[string]Icon)
+	readconfig()
 	readfiles()
 	log.Println("ready")
 	router := gin.Default()
@@ -67,6 +74,21 @@ func main() {
 	router.GET("/dmi/search/:search", searcher)
 
 	router.Run("0.0.0.0:17011")
+}
+
+func readconfig() {
+	f, err := os.Open("conf.yml")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(&AppConfig)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func searcher(c *gin.Context) {
