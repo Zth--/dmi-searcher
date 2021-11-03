@@ -8,6 +8,7 @@ import (
 
 	"net/http"
 
+	"github.com/gin-gonic/autotls"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 )
@@ -35,8 +36,6 @@ func readfiles() {
 	var result []string
 	var dmipath string
 
-	vgicon_dir := "https://github.com/vgstation-coders/vgstation13/tree/Bleeding-Edge/"
-
 	errs := filepath.Walk(AppConfig.IconsFolder,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -47,7 +46,7 @@ func readfiles() {
 				if dirindex < 0 {
 					dmipath = "not found"
 				} else {
-					dmipath = vgicon_dir + path[dirindex:] + ".dmi"
+					dmipath = path[dirindex:] + ".dmi"
 				}
 				return nil
 			}
@@ -68,12 +67,13 @@ func main() {
 	readconfig()
 	readfiles()
 	log.Println("ready")
+
 	router := gin.Default()
 	router.GET("/dmis", getfiles)
 	router.GET("/dmi/:filename", geticon)
 	router.GET("/dmi/search/:search", searcher)
 
-	router.Run("0.0.0.0:17011")
+	log.Fatal(autotls.Run(router, "vgutils.com.ar"))
 }
 
 func readconfig() {
@@ -121,7 +121,9 @@ func geticon(c *gin.Context) {
 }
 
 func middleend(c *gin.Context) {
-	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Cache-Control", "public")
+	c.Writer.Header().Set("Cache-Control", "max-age=2419200") // a month
+	//c.Writer.Header().Set("Access-Control-Allow-Origin", "https://zth--.github.io")
 	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
