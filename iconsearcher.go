@@ -24,9 +24,9 @@ type Dmi struct {
 }
 
 type Icon struct {
-	Filepath string `json:"filepath"`
 	Name     string `json:"name"`
 	Dmi      string `json:"dmi"`
+	filepath string
 }
 
 var icons map[string]Icon
@@ -46,13 +46,13 @@ func readfiles() {
 				if dirindex < 0 {
 					dmipath = "not found"
 				} else {
-					dmipath = path[dirindex:] + ".dmi"
+					dmipath = path[dirindex:]
 				}
 				return nil
 			}
 			result = append(result, path)
 			extensionless_name := info.Name()[:len(info.Name())-4]
-			icons[extensionless_name] = Icon{path, extensionless_name, dmipath}
+			icons[extensionless_name] = Icon{extensionless_name, dmipath, path}
 			log.Println(extensionless_name, path)
 			return nil
 		})
@@ -115,7 +115,7 @@ func geticon(c *gin.Context) {
 		c.JSON(http.StatusNoContent, "no")
 		return
 	}
-	filepath := icons[filename].Filepath
+	filepath := icons[filename].filepath
 	c.Writer.Header().Set("Content-Type", "image/png")
 	c.File(filepath)
 }
