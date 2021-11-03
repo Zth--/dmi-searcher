@@ -123,7 +123,7 @@ func geticon(c *gin.Context) {
 func middleend(c *gin.Context) {
 	c.Writer.Header().Set("Cache-Control", "public")
 	c.Writer.Header().Set("Cache-Control", "max-age=2419200") // a month
-	//c.Writer.Header().Set("Access-Control-Allow-Origin", "https://zth--.github.io")
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "https://zth--.github.io")
 	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
