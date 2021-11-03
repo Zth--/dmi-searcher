@@ -42,13 +42,13 @@ func readfiles() {
 				return err
 			}
 			if info.IsDir() {
-				dirindex := strings.Index(path, "icons")
-				if dirindex < 0 {
-					dmipath = "not found"
-				} else {
-					dmipath = path[dirindex:]
-				}
 				return nil
+			}
+			dirindex := strings.Index(path, "icons")
+			if dirindex < 0 {
+				dmipath = "not found"
+			} else {
+				dmipath = path[dirindex:]
 			}
 			result = append(result, path)
 			extensionless_name := info.Name()[:len(info.Name())-4]
