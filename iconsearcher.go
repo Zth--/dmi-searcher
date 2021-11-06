@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"net/http"
@@ -25,12 +26,21 @@ type Dmi struct {
 
 type Icon struct {
 	Name     string `json:"name"`
-	Dmi      string `json:"dmi"`
+	DmiPath  string `json:"dmi"`
 	filepath string
+	dmi      string
 }
 
 var icons map[string]Icon
+var icons_ordered_by_dmi map[string][]*Icon
+
 var AppConfig *Cfg
+
+func orderbydmi(folder string, icon *Icon) {
+	ico := icons_ordered_by_dmi[folder]
+	ico = append(ico, icon)
+	icons_ordered_by_dmi[folder] = ico
+}
 
 func readfiles() {
 	var result []string
@@ -52,8 +62,13 @@ func readfiles() {
 			}
 			result = append(result, path)
 			extensionless_name := info.Name()[:len(info.Name())-4]
-			icons[extensionless_name] = Icon{extensionless_name, dmipath, path}
-			log.Println(extensionless_name, path)
+			folder := strings.Replace(path, "/"+extensionless_name+".png", "", 1)
+			i := strings.LastIndex(folder, "/") + 1
+			folder = folder[i:]
+			icon := Icon{extensionless_name, dmipath, path, folder}
+
+			icons[extensionless_name] = icon
+			orderbydmi(folder, &icon)
 			return nil
 		})
 
@@ -64,16 +79,23 @@ func readfiles() {
 
 func main() {
 	icons = make(map[string]Icon)
+	icons_ordered_by_dmi = make(map[string][]*Icon)
 	readconfig()
 	readfiles()
 	log.Println("ready")
 
 	router := gin.Default()
 	router.GET("/dmis", getfiles)
-	router.GET("/dmi/:filename", geticon)
-	router.GET("/dmi/search/:search", searcher)
+	//router.GET("/dmi/:filename", geticon)
+	router.GET("/icon/search/:search", searcher)
+	router.GET("/dmi/search/:search", searcherByDmi)
 
-	log.Fatal(autotls.Run(router, "vgutils.com.ar"))
+	scope := os.Getenv("SCOPE")
+	if scope == "PROD" {
+		log.Fatal(autotls.Run(router, "vgutils.com.ar"))
+		return
+	}
+	router.Run("0.0.0.0:17011")
 }
 
 func readconfig() {
@@ -103,6 +125,30 @@ func searcher(c *gin.Context) {
 	c.JSON(http.StatusOK, results)
 }
 
+func searcherByDmi(c *gin.Context) {
+	middleend(c)
+	dmi := c.Param("search")
+
+	r := regexp.MustCompile(`^[0-9a-zA-Z_-]+$`)
+	if !r.MatchString(dmi) {
+		c.JSON(http.StatusBadRequest, "what the dog doin")
+		return
+	}
+
+	dmi = strings.ToLower(dmi)
+	var result []Icon
+	if icons, found := icons_ordered_by_dmi[dmi]; found {
+		for _, f := range icons {
+			result = append(result, *f)
+		}
+	} else {
+		c.JSON(http.StatusNoContent, "bad luck")
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 func getfiles(c *gin.Context) {
 	middleend(c)
 	c.JSON(http.StatusOK, icons)
@@ -122,7 +168,7 @@ func geticon(c *gin.Context) {
 
 func middleend(c *gin.Context) {
 	c.Writer.Header().Set("Cache-Control", "public")
-	c.Writer.Header().Set("Cache-Control", "max-age=2419200") // a month
+	c.Writer.Header().Set("Cache-Control", "max-age=86400") // a day
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "https://zth--.github.io")
 	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
