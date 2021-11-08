@@ -135,7 +135,6 @@ func searcherByDmi(c *gin.Context) {
 		return
 	}
 
-	dmi = strings.ToLower(dmi)
 	var result []Icon
 	if icons, found := icons_ordered_by_dmi[dmi]; found {
 		for _, f := range icons {
