@@ -88,7 +88,7 @@ func main() {
 	router.GET("/dmis", getfiles)
 	//router.GET("/dmi/:filename", geticon)
 	router.GET("/icon/search/:search", searcher)
-	router.GET("/dmi/search/:search", searcherByDmi)
+	router.GET("/dmi/search/:search", searcherbydmi)
 
 	scope := os.Getenv("SCOPE")
 	if scope == "PROD" {
@@ -125,7 +125,7 @@ func searcher(c *gin.Context) {
 	c.JSON(http.StatusOK, results)
 }
 
-func searcherByDmi(c *gin.Context) {
+func searcherbydmi(c *gin.Context) {
 	middleend(c)
 	dmi := c.Param("search")
 
