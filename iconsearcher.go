@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"net/http"
@@ -42,6 +43,19 @@ func orderbydmi(folder string, icon *Icon) {
 	icons_ordered_by_dmi[folder] = ico
 }
 
+func inserticon(icon *Icon) {
+	var suffix int
+	rootName := icon.Name
+	for {
+		if _, ok := icons[icon.Name]; !ok {
+			icons[icon.Name] = *icon
+			return
+		}
+		suffix++
+		icon.Name = rootName + " (" + strconv.Itoa(suffix) + ")"
+	}
+}
+
 func readfiles() {
 	var result []string
 	var dmipath string
@@ -67,7 +81,7 @@ func readfiles() {
 			folder = folder[i:]
 			icon := Icon{extensionless_name, dmipath, path, folder}
 
-			icons[extensionless_name] = icon
+			inserticon(&icon)
 			orderbydmi(folder, &icon)
 			return nil
 		})
